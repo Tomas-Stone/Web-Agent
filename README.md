@@ -22,7 +22,7 @@ cp .env.example .env
 
 ### 3. Run Demo
 ```bash
-# Quick demo on Google Flights (with video recording!)
+# Quick demo on Kelbillet (with video recording!)
 python main.py demo
 
 # Run a task on Wikipedia

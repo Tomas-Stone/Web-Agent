@@ -106,8 +106,8 @@ def list_sites():
     print("="*70 + "\n")
 
 async def run_demo():
-    """Quick demo on Google Flights"""
-    print("\n🚀 Running quick demo on Google Flights...\n")
+    """Quick demo on Kelbillet"""
+    print("\n🚀 Running quick demo on Kelbillet...\n")
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     save_dir = Path(f"runs/demo_{timestamp}")
@@ -118,8 +118,8 @@ async def run_demo():
     
     try:
         result = await agent.run_task(
-            url="https://www.google.com/travel/flights",
-            task="Click on the departure city input field to start searching for flights",
+            url="https://www.kelbillet.com/",
+            task="Find and click on the search box to look for tickets",
             save_dir=save_dir
         )
         
@@ -137,8 +137,8 @@ async def run_demo():
         with open(save_dir / "result.json", "w") as f:
             json.dump({
                 "demo": True,
-                "site": "Google Flights",
-                "url": "https://www.google.com/travel/flights",
+                "site": "Kelbillet",
+                "url": "https://www.kelbillet.com/",
                 "timestamp": timestamp,
                 **result
             }, f, indent=2)

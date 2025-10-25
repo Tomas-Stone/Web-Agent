@@ -24,14 +24,14 @@ TEST_SITES = [
         ]
     ),
     
-    # Flight Booking
+    # E-commerce
     TestSite(
-        name="Google Flights",
-        url="https://www.google.com/travel/flights",
-        category="flight_booking",
+        name="Kelbillet",
+        url="https://www.kelbillet.com/",
+        category="ticket_booking",
         sample_tasks=[
-            "Click on the departure city field",
-            "Search for flights from New York to Los Angeles",
+            "Click on the search box to look for an event",
+            "Find and click on a concert ticket",
         ]
     ),
     
@@ -68,7 +68,7 @@ TEST_SITES = [
 # Browser settings
 VIEWPORT_WIDTH = 1280
 VIEWPORT_HEIGHT = 720
-TIMEOUT_MS = 30000
+TIMEOUT_MS = 60000  # 60 seconds
 
 # Agent settings
 MAX_STEPS = 15
