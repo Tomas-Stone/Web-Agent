@@ -22,7 +22,7 @@ cp .env.example .env
 
 ### 3. Run Demo
 ```bash
-# Quick demo (takes ~30 seconds)
+# Quick demo on Google Flights (with video recording!)
 python main.py demo
 
 # Run a task on Wikipedia
@@ -30,6 +30,9 @@ python main.py task Wikipedia "Search for Artificial Intelligence"
 
 # List all available test sites
 python main.py list
+
+# Run without video recording
+python main.py task Wikipedia "Search for AI" --no-video
 ```
 
 ## How It Works
@@ -79,6 +82,7 @@ See all sites: `python main.py list`
 ## Output
 
 Each run creates a folder in `runs/` with:
+- 🎥 **Video recording** (`agent_recording.webm` or `demo_recording.webm`)
 - Screenshots for each step (`step_01.png`, `step_02.png`, ...)
 - `result.json` with full trajectory and outcome
 

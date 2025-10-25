@@ -24,6 +24,17 @@ TEST_SITES = [
         ]
     ),
     
+    # Flight Booking
+    TestSite(
+        name="Google Flights",
+        url="https://www.google.com/travel/flights",
+        category="flight_booking",
+        sample_tasks=[
+            "Click on the departure city field",
+            "Search for flights from New York to Los Angeles",
+        ]
+    ),
+    
     # Info search
     TestSite(
         name="Wikipedia",

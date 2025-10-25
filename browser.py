@@ -2,7 +2,8 @@
 
 import asyncio
 from typing import Optional, Tuple
-from playwright.async_api import async_playwright, Browser, Page
+from pathlib import Path
+from playwright.async_api import async_playwright, Browser, Page, BrowserContext
 
 from config import VIEWPORT_WIDTH, VIEWPORT_HEIGHT, TIMEOUT_MS
 from actions import Action, ActionType
@@ -13,25 +14,50 @@ class BrowserController:
     def __init__(self):
         self.playwright = None
         self.browser: Optional[Browser] = None
+        self.context: Optional[BrowserContext] = None
         self.page: Optional[Page] = None
+        self.video_path: Optional[Path] = None
         
-    async def start(self, headless: bool = False):
+    async def start(self, headless: bool = False, record_video: bool = False, video_dir: Optional[Path] = None):
         """Launch browser"""
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(headless=headless)
-        self.page = await self.browser.new_page(
-            viewport={"width": VIEWPORT_WIDTH, "height": VIEWPORT_HEIGHT}
-        )
+        
+        # Configure context with optional video recording
+        context_options = {
+            "viewport": {"width": VIEWPORT_WIDTH, "height": VIEWPORT_HEIGHT}
+        }
+        
+        if record_video and video_dir:
+            video_dir.mkdir(parents=True, exist_ok=True)
+            context_options["record_video_dir"] = str(video_dir)
+            context_options["record_video_size"] = {"width": VIEWPORT_WIDTH, "height": VIEWPORT_HEIGHT}
+        
+        self.context = await self.browser.new_context(**context_options)
+        self.page = await self.context.new_page()
         self.page.set_default_timeout(TIMEOUT_MS)
         
-    async def stop(self):
-        """Close browser and cleanup"""
+    async def stop(self) -> Optional[Path]:
+        """Close browser and cleanup, return video path if recorded"""
+        video_path = None
+        
         if self.page:
+            # Get video path before closing
+            video = self.page.video
+            if video:
+                video_path = await video.path()
             await self.page.close()
+        
+        if self.context:
+            await self.context.close()
+        
         if self.browser:
             await self.browser.close()
+        
         if self.playwright:
             await self.playwright.stop()
+        
+        return Path(video_path) if video_path else None
     
     async def navigate(self, url: str) -> bool:
         """Go to URL"""
