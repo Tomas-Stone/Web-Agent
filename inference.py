@@ -28,7 +28,8 @@ class VisionLanguageModel:
         screenshot: bytes,
         task: str,
         history: List[str],
-        url: str
+        url: str,
+        user_hint: Optional[str] = None
     ) -> str:
         """
         Get next action from vision-language model.
@@ -38,6 +39,7 @@ class VisionLanguageModel:
             task: Task to accomplish
             history: Previous actions taken
             url: Current page URL
+            user_hint: Optional hint from user for guidance
             
         Returns:
             Model response with thought + action
@@ -48,7 +50,7 @@ class VisionLanguageModel:
         
         # Build prompt
         system_prompt = self._build_system_prompt()
-        user_message = self._build_user_message(task, url, history)
+        user_message = self._build_user_message(task, url, history, user_hint)
         
         # Prepare API request
         headers = {
@@ -122,19 +124,23 @@ EXAMPLE:
 Thought: I can see a search box in the center of the page at approximately (640, 300). I need to click it first.
 Action: click(640, 300)"""
 
-    def _build_user_message(self, task: str, url: str, history: List[str]) -> str:
+    def _build_user_message(self, task: str, url: str, history: List[str], user_hint: Optional[str] = None) -> str:
         """User message with task context"""
         
         history_text = "None"
         if history:
             history_text = "\n".join([f"{i+1}. {h}" for i, h in enumerate(history[-5:])])  # Last 5 actions
         
+        hint_text = ""
+        if user_hint:
+            hint_text = f"\n\n🎯 USER HINT: {user_hint}\nConsider this guidance when deciding your next action."
+        
         return f"""TASK: {task}
 
 CURRENT URL: {url}
 
 PREVIOUS ACTIONS:
-{history_text}
+{history_text}{hint_text}
 
 Look at the screenshot and decide the next action to accomplish the task.
 Output your thought process, then a single action."""

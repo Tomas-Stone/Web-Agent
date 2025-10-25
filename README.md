@@ -92,12 +92,30 @@ Each run creates a folder in `runs/` with:
 # Search on Wikipedia (show browser)
 python main.py task Wikipedia "Search for Machine Learning"
 
+# Interactive mode - guide the agent with hints
+python main.py task Wikipedia "Search for AI" -i
+python main.py demo -i
+
 # Amazon search (headless mode)
 python main.py task Amazon "Search for laptop" --headless
 
 # Google search
 python main.py task Google "Search for Python tutorial"
 ```
+
+## Interactive Mode
+
+Use `-i` or `--interactive` to guide the agent during execution:
+
+```bash
+python main.py demo -i
+```
+
+At each step, you'll have 3 seconds to provide a hint:
+- **"type instead of click"** - tells agent to type text
+- **"the search box is at coordinates 640, 200"** - provides location info
+- **"click the blue button"** - gives visual guidance
+- Press **Enter** to let agent decide on its own
 
 ## Next Steps
 

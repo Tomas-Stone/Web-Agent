@@ -6,6 +6,8 @@ from pathlib import Path
 import json
 from datetime import datetime
 import shutil
+import sys
+import select
 
 from browser import BrowserController
 from inference import VisionLanguageModel
@@ -15,12 +17,14 @@ from config import VIEWPORT_WIDTH, VIEWPORT_HEIGHT, MAX_STEPS
 class WebAgent:
     """Autonomous web navigation agent"""
     
-    def __init__(self, headless: bool = False, record_video: bool = False):
+    def __init__(self, headless: bool = False, record_video: bool = False, interactive: bool = False):
         self.browser = BrowserController()
         self.model = VisionLanguageModel()
         self.headless = headless
         self.record_video = record_video
+        self.interactive = interactive
         self.history: List[str] = []
+        self.user_hints: List[str] = []
         
     async def start(self, video_dir: Optional[Path] = None):
         """Initialize browser"""
@@ -96,6 +100,42 @@ class WebAgent:
                     f.write(screenshot)
                 print(f"💾 Saved: {screenshot_path.name}")
             
+            # Check for user input in interactive mode
+            user_hint = None
+            if self.interactive:
+                print("\n💬 You can provide a hint (or press Enter to skip): ", end='', flush=True)
+                
+                # Non-blocking input check with timeout
+                import sys
+                import select
+                
+                # Wait up to 3 seconds for input
+                if sys.platform != 'win32':
+                    rlist, _, _ = select.select([sys.stdin], [], [], 3.0)
+                    if rlist:
+                        user_hint = sys.stdin.readline().strip()
+                else:
+                    # Windows fallback - just wait for input
+                    import threading
+                    user_input = []
+                    
+                    def get_input():
+                        user_input.append(input())
+                    
+                    input_thread = threading.Thread(target=get_input)
+                    input_thread.daemon = True
+                    input_thread.start()
+                    input_thread.join(timeout=3.0)
+                    
+                    if user_input:
+                        user_hint = user_input[0].strip()
+                    else:
+                        print()  # New line if no input
+                
+                if user_hint:
+                    self.user_hints.append(user_hint)
+                    print(f"✅ Hint received: {user_hint}")
+            
             # Get model prediction
             print("🤔 Thinking...")
             try:
@@ -103,7 +143,8 @@ class WebAgent:
                     screenshot=screenshot,
                     task=task,
                     history=self.history,
-                    url=current_url
+                    url=current_url,
+                    user_hint=user_hint
                 )
             except Exception as e:
                 print(f"❌ Model error: {e}")

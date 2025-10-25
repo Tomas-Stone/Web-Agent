@@ -4,8 +4,10 @@ Web Agent - Main entry point
 
 Usage:
   python main.py task <site> <task>           # Run single task
+  python main.py task <site> <task> -i        # Run with interactive mode (provide hints)
   python main.py list                         # List available sites
   python main.py demo                         # Quick demo
+  python main.py demo -i                      # Quick demo with interactive mode
 """
 
 import asyncio
@@ -17,7 +19,7 @@ from datetime import datetime
 from agent import WebAgent
 from config import TEST_SITES
 
-async def run_task(site_name: str, task: str, headless: bool = False, record_video: bool = True):
+async def run_task(site_name: str, task: str, headless: bool = False, record_video: bool = True, interactive: bool = False):
     """Run a single task on a site"""
     
     # Find the site
@@ -33,8 +35,11 @@ async def run_task(site_name: str, task: str, headless: bool = False, record_vid
     save_dir = Path(f"runs/{site_name.lower()}_{timestamp}")
     save_dir.mkdir(parents=True, exist_ok=True)
     
+    if interactive:
+        print("\n💬 INTERACTIVE MODE: You can provide hints to guide the agent at each step.\n")
+    
     # Initialize and run agent
-    agent = WebAgent(headless=headless, record_video=record_video)
+    agent = WebAgent(headless=headless, record_video=record_video, interactive=interactive)
     await agent.start(video_dir=save_dir if record_video else None)
     
     try:
@@ -105,7 +110,7 @@ def list_sites():
     print("Example: python main.py task Wikipedia \"Search for Python\"")
     print("="*70 + "\n")
 
-async def run_demo():
+async def run_demo(interactive: bool = False):
     """Quick demo on Kelbillet"""
     print("\n🚀 Running quick demo on Kelbillet...\n")
     
@@ -113,7 +118,10 @@ async def run_demo():
     save_dir = Path(f"runs/demo_{timestamp}")
     save_dir.mkdir(parents=True, exist_ok=True)
     
-    agent = WebAgent(headless=False, record_video=True)
+    if interactive:
+        print("\n💬 INTERACTIVE MODE: You can provide hints to guide the agent at each step.\n")
+    
+    agent = WebAgent(headless=False, record_video=True, interactive=interactive)
     await agent.start(video_dir=save_dir)
     
     try:
@@ -160,7 +168,8 @@ def main():
         list_sites()
     
     elif command == "demo":
-        asyncio.run(run_demo())
+        interactive = "--interactive" in sys.argv or "-i" in sys.argv
+        asyncio.run(run_demo(interactive))
     
     elif command == "task":
         if len(sys.argv) < 4:
@@ -172,8 +181,9 @@ def main():
         task = sys.argv[3]
         headless = "--headless" in sys.argv
         no_video = "--no-video" in sys.argv
+        interactive = "--interactive" in sys.argv or "-i" in sys.argv
         
-        asyncio.run(run_task(site_name, task, headless, record_video=not no_video))
+        asyncio.run(run_task(site_name, task, headless, record_video=not no_video, interactive=interactive))
     
     else:
         print(f"Unknown command: {command}")
