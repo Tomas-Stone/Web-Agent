@@ -64,7 +64,7 @@ web_agent/
 ## Available Actions
 
 - `click(x, y)` - Click at coordinates
-- `type("text")` - Type text
+- `type(x, y, "text")` - Click at coordinates and type text (combined action)
 - `scroll(direction, amount)` - Scroll up/down
 - `wait(seconds)` - Wait
 - `press("key")` - Press Enter, Tab, etc.

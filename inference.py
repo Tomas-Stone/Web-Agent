@@ -103,7 +103,7 @@ class VisionLanguageModel:
 
 AVAILABLE ACTIONS:
 - click(x, y): Click at pixel coordinates
-- type("text"): Type text into focused element
+- type(x, y, "text"): Click at coordinates and type text (combines click + typing)
 - scroll(direction, amount): Scroll up/down (amount in pixels, default 500)
 - wait(seconds): Wait (max 10 seconds)
 - press("key"): Press key (Enter, Tab, Escape, etc.)
@@ -118,11 +118,15 @@ IMPORTANT:
 - Viewport is 1280x720 pixels (coordinates must be within this range)
 - Only output ONE action at a time
 - Be precise with coordinates - look carefully at the screenshot
-- After typing in a search box, remember to press("Enter") to submit
+- Use type(x, y, "text") to click on an input field AND type text in one action
+- After typing, use press("Enter") to submit if needed
 
-EXAMPLE:
-Thought: I can see a search box in the center of the page at approximately (640, 300). I need to click it first.
-Action: click(640, 300)"""
+EXAMPLES:
+Thought: I can see a search box in the center at (640, 300). I need to type "laptop" in it.
+Action: type(640, 300, "laptop")
+
+Thought: The search is complete, now I need to submit it by pressing Enter.
+Action: press("Enter")"""
 
     def _build_user_message(self, task: str, url: str, history: List[str], user_hint: Optional[str] = None) -> str:
         """User message with task context"""

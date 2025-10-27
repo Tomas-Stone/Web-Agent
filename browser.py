@@ -96,9 +96,14 @@ class BrowserController:
                 return True, f"Clicked at ({x}, {y})"
             
             elif action.type == ActionType.TYPE:
+                x, y = action.params["x"], action.params["y"]
                 text = action.params["text"]
+                # Click at coordinates first to focus the element
+                await self.page.mouse.click(x, y)
+                await asyncio.sleep(0.2)
+                # Then type the text
                 await self.page.keyboard.type(text, delay=50)  # 50ms between keys
-                return True, f"Typed: '{text}'"
+                return True, f"Clicked ({x}, {y}) and typed: '{text}'"
             
             elif action.type == ActionType.SCROLL:
                 direction = action.params["direction"]

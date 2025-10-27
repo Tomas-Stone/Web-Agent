@@ -32,7 +32,7 @@ class ActionParser:
     # Regex patterns for each action
     PATTERNS = {
         ActionType.CLICK: r"click\((\d+),\s*(\d+)\)",
-        ActionType.TYPE: r"type\(['\"](.+?)['\"]\)",
+        ActionType.TYPE: r"type\((\d+),\s*(\d+),\s*['\"](.+?)['\"]\)",  # type(x, y, "text")
         ActionType.SCROLL: r"scroll\((\w+)(?:,\s*(\d+))?\)",
         ActionType.WAIT: r"wait\((\d+(?:\.\d+)?)\)",
         ActionType.PRESS: r"press\(['\"](\w+)['\"]\)",
@@ -79,8 +79,9 @@ class ActionParser:
             return Action(action_type, {"x": x, "y": y}, reasoning)
         
         elif action_type == ActionType.TYPE:
-            text = match.group(1)
-            return Action(action_type, {"text": text}, reasoning)
+            x, y = int(match.group(1)), int(match.group(2))
+            text = match.group(3)
+            return Action(action_type, {"x": x, "y": y, "text": text}, reasoning)
         
         elif action_type == ActionType.SCROLL:
             direction = match.group(1).lower()
