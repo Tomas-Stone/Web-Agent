@@ -25,8 +25,14 @@ cp .env.example .env
 # Quick demo on Kelbillet (with video recording!)
 python main.py demo
 
+# Demo with reward model (judges each action)
+python main.py demo --reward
+
 # Run a task on Wikipedia
 python main.py task Wikipedia "Search for Artificial Intelligence"
+
+# Run with reward model to see action judgments
+python main.py task Wikipedia "Search for AI" --reward
 
 # List all available test sites
 python main.py list

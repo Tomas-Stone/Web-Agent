@@ -19,7 +19,7 @@ from datetime import datetime
 from agent import WebAgent
 from config import TEST_SITES
 
-async def run_task(site_name: str, task: str, headless: bool = False, record_video: bool = True, interactive: bool = False):
+async def run_task(site_name: str, task: str, headless: bool = False, record_video: bool = True, interactive: bool = False, use_reward: bool = False):
     """Run a single task on a site"""
     
     # Find the site
@@ -38,8 +38,11 @@ async def run_task(site_name: str, task: str, headless: bool = False, record_vid
     if interactive:
         print("\n💬 INTERACTIVE MODE: You can provide hints to guide the agent at each step.\n")
     
+    if use_reward:
+        print("\n⚖️  REWARD MODEL ENABLED: Actions will be judged after execution.\n")
+    
     # Initialize and run agent
-    agent = WebAgent(headless=headless, record_video=record_video, interactive=interactive)
+    agent = WebAgent(headless=headless, record_video=record_video, interactive=interactive, use_reward_model=use_reward)
     await agent.start(video_dir=save_dir if record_video else None)
     
     try:
@@ -110,9 +113,15 @@ def list_sites():
     print("Example: python main.py task Wikipedia \"Search for Python\"")
     print("="*70 + "\n")
 
-async def run_demo(interactive: bool = False):
+async def run_demo(interactive: bool = False, use_reward: bool = False):
     """Quick demo on Kelbillet"""
-    print("\n🚀 Running quick demo on Kelbillet...\n")
+    mode_text = ""
+    if interactive:
+        mode_text += " (interactive)"
+    if use_reward:
+        mode_text += " (with reward model)"
+    
+    print(f"\n🚀 Running quick demo on Kelbillet{mode_text}...\n")
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     save_dir = Path(f"runs/demo_{timestamp}")
@@ -121,13 +130,16 @@ async def run_demo(interactive: bool = False):
     if interactive:
         print("\n💬 INTERACTIVE MODE: You can provide hints to guide the agent at each step.\n")
     
-    agent = WebAgent(headless=False, record_video=True, interactive=interactive)
+    if use_reward:
+        print("\n⚖️  REWARD MODEL ENABLED: Actions will be judged after execution.\n")
+    
+    agent = WebAgent(headless=False, record_video=True, interactive=interactive, use_reward_model=use_reward)
     await agent.start(video_dir=save_dir)
     
     try:
         result = await agent.run_task(
             url="https://www.kelbillet.com/",
-            task="Find and click on the search box to look for tickets",
+            task="Compare flights from Paris to New York for 1 person, one way on the 30th of next month and find the cheapest option.",
             save_dir=save_dir
         )
         
@@ -169,7 +181,8 @@ def main():
     
     elif command == "demo":
         interactive = "--interactive" in sys.argv or "-i" in sys.argv
-        asyncio.run(run_demo(interactive))
+        use_reward = "--reward" in sys.argv
+        asyncio.run(run_demo(interactive, use_reward))
     
     elif command == "task":
         if len(sys.argv) < 4:
@@ -182,8 +195,9 @@ def main():
         headless = "--headless" in sys.argv
         no_video = "--no-video" in sys.argv
         interactive = "--interactive" in sys.argv or "-i" in sys.argv
+        use_reward = "--reward" in sys.argv
         
-        asyncio.run(run_task(site_name, task, headless, record_video=not no_video, interactive=interactive))
+        asyncio.run(run_task(site_name, task, headless, record_video=not no_video, interactive=interactive, use_reward=use_reward))
     
     else:
         print(f"Unknown command: {command}")

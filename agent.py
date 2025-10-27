@@ -11,18 +11,21 @@ import select
 
 from browser import BrowserController
 from inference import VisionLanguageModel
+from reward import RewardModel
 from actions import ActionParser, Action, ActionType
 from config import VIEWPORT_WIDTH, VIEWPORT_HEIGHT, MAX_STEPS
 
 class WebAgent:
     """Autonomous web navigation agent"""
     
-    def __init__(self, headless: bool = False, record_video: bool = False, interactive: bool = False):
+    def __init__(self, headless: bool = False, record_video: bool = False, interactive: bool = False, use_reward_model: bool = False):
         self.browser = BrowserController()
         self.model = VisionLanguageModel()
+        self.reward_model = RewardModel() if use_reward_model else None
         self.headless = headless
         self.record_video = record_video
         self.interactive = interactive
+        self.use_reward_model = use_reward_model
         self.history: List[str] = []
         self.user_hints: List[str] = []
         
@@ -81,6 +84,10 @@ class WebAgent:
         
         self.history = []
         trajectory = []
+        
+        # Track previous state for reward model
+        prev_screenshot = None
+        prev_url = None
         
         # Main agent loop
         for step in range(1, MAX_STEPS + 1):
@@ -220,19 +227,67 @@ class WebAgent:
             status = "✅" if exec_success else "❌"
             print(f"{status} {exec_msg}")
             
+            # Get reward if enabled
+            reward = None
+            reward_explanation = None
+            
             if exec_success:
+                # Wait for page to settle
+                await asyncio.sleep(1)
+                
+                # Get new state for reward model
+                new_screenshot = await self.browser.get_screenshot()
+                new_url = await self.browser.get_current_url()
+                
+                # Judge action with reward model
+                if self.use_reward_model and prev_screenshot is not None:
+                    try:
+                        print("⚖️  Judging action...")
+                        reward, reward_explanation = self.reward_model.judge_action(
+                            screenshot_before=prev_screenshot,
+                            action_taken=str(action),
+                            screenshot_after=new_screenshot,
+                            task=task,
+                            url_before=prev_url,
+                            url_after=new_url
+                        )
+                        
+                        # Display reward
+                        if reward > 0:
+                            print(f"🟢 Reward: +{reward} - {reward_explanation}")
+                        elif reward < 0:
+                            print(f"🔴 Reward: {reward} - {reward_explanation}")
+                        else:
+                            print(f"⚪ Reward: {reward} - {reward_explanation}")
+                    except Exception as e:
+                        print(f"⚠️  Reward model error: {e}")
+                        reward = 0.0
+                        reward_explanation = "Error in judgment"
+                
+                # Update previous state
+                prev_screenshot = new_screenshot
+                prev_url = new_url
+                
                 # Add to history
                 self.history.append(f"{action} - {action.reasoning}")
-                trajectory.append({
+                
+                # Save to trajectory
+                step_data = {
                     "step": step,
                     "action": str(action),
                     "reasoning": action.reasoning,
                     "url": current_url,
                     "result": exec_msg
-                })
-            
-            # Brief pause between actions
-            await asyncio.sleep(1)
+                }
+                if reward is not None:
+                    step_data["reward"] = reward
+                    step_data["reward_explanation"] = reward_explanation
+                
+                trajectory.append(step_data)
+            else:
+                # Action failed, update state anyway
+                prev_screenshot = screenshot
+                prev_url = current_url
         
         # Max steps reached
         print(f"\n⚠️  Reached maximum steps ({MAX_STEPS})")
