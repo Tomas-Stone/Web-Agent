@@ -18,6 +18,7 @@ playwright install chromium
 ```bash
 cp .env.example .env
 # Edit .env and add: OPENROUTER_API_KEY=your_key_here
+# Make sure to put .env in .gitignore
 ```
 
 ### 3. Run Demo
